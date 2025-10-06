@@ -10,24 +10,24 @@ contract TokleTest is Test {
     Tokle public tokle;
     address user = address(0x123);
 
-    uint256 costPerTry = 1e18;
-
     function setUp() public {
         token = new TestToken("My Test Token", "MTT", 1000e18);
-        tokle = new Tokle(user, address(token), "apple", costPerTry);
+        tokle = new Tokle(address(token), 1e18);
 
-        token.mintToken(user, 10e18);
+        tokle.setTargetWord("apple");
 
         vm.prank(user);
         token.approve(address(tokle), 1000e18);
 
+        token.mintToken(user, 10e18);
         token.mintToken(address(tokle), 10e18);
+
     }
 
     // Test registering a wrong guess
     function testRegisterWrongGuess() public {
         vm.prank(user);
-        tokle.tryGuess("alert");
+        tokle.tryGuess(user,"alert");
 
         // Assert the guess register
         string[] memory guesses = tokle.getGuesses();
@@ -43,7 +43,7 @@ contract TokleTest is Test {
     // Test winning the game
     function testWinGame() public {
         vm.prank(user);
-        tokle.tryGuess("apple");
+        tokle.tryGuess(user,"apple");
 
         assertEq(tokle.getTries(), 0);
 
@@ -53,10 +53,10 @@ contract TokleTest is Test {
     // Test multiple guesses then win
     function testMultipleGuessesThenWin() public {
         vm.prank(user);
-        tokle.tryGuess("alert");
+        tokle.tryGuess(user,"alert");
 
         vm.prank(user);
-        tokle.tryGuess("angle");
+        tokle.tryGuess(user,"angle");
 
         // Two wrong guesses => tries left = 3
         assertEq(tokle.getTries(), 3);
@@ -65,7 +65,7 @@ contract TokleTest is Test {
         assertEq(token.balanceOf(user), 8e18);
 
         vm.prank(user);
-        tokle.tryGuess("apple");
+        tokle.tryGuess(user, "apple");
 
         // Remaining tries = 0
         assertEq(tokle.getTries(), 0);
@@ -78,10 +78,10 @@ contract TokleTest is Test {
     // Test that game cannot accept more guesses after finishing
     function testCannotGuessAfterGameOver() public {
         vm.prank(user);
-        tokle.tryGuess("apple"); // win
+        tokle.tryGuess(user, "apple"); // win
 
         vm.prank(user);
         vm.expectRevert("no tries left");
-        tokle.tryGuess("alert");
+        tokle.tryGuess(user, "alert");
     }
 }
