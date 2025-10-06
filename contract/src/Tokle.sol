@@ -7,7 +7,6 @@ interface IERC20 {
 }
 
 contract Tokle {
-    address public player;
     IERC20 public token;
     string public targetWord;
     uint8 public triesLeft;
@@ -16,16 +15,25 @@ contract Tokle {
     string[] public guesses;
 
     constructor(address _token, string memory _word, uint256 _costPerTry) {
-        player = msg.sender;
         token = IERC20(_token);
         targetWord = _word;
         triesLeft = uint8(5);
         costPerTry = _costPerTry;
     }
 
-    function registerGuess(string calldata _guess) public {
+    function tryGuess(string calldata _guess) public{
         require(triesLeft > 0, "no tries left");
+        require(bytes(_guess).length == 5, "must be 5 letters");
 
+        if (keccak256(bytes(_guess)) == keccak256(bytes(targetWord))){
+            endGame();
+        }
+        else{
+            registerGuess(_guess);
+        }
+    }
+
+    function registerGuess(string calldata _guess) public {
         bool ok = token.transferFrom(msg.sender, address(this), costPerTry);
         require(ok, "token transfer failed");
 
@@ -36,7 +44,7 @@ contract Tokle {
     function endGame() public {
         uint256 refund = uint256(triesLeft) * costPerTry;
         if (refund > 0) {
-            bool ok = token.transfer(player, refund);
+            bool ok = token.transfer(msg.sender, refund);
             require(ok, "token transfer failed");
         }
 
