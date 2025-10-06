@@ -10,10 +10,10 @@ contract TestToken is ERC20,Ownable {
         string memory symbol_,
         uint256 initialSupply_
     ) ERC20(name_, symbol_) Ownable(msg.sender) {
-        _mint(msg.sender, initialSupply_ * (10 ** 18));
+        _mint(msg.sender, initialSupply_);
     }
 
     function mintToken(address to, uint256 amount) public {
-        _mint(to, amount * (10 ** 18));
+        _mint(to, amount);
     }
 }
