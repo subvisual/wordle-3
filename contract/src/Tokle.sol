@@ -28,6 +28,9 @@ contract Tokle {
         require(triesLeft > 0, "no tries left");
         require(bytes(_guess).length == 5, "must be 5 letters");
 
+        bool ok = token.transferFrom(player, address(this), costPerTry);
+        require(ok, "token transfer failed");
+
         if (keccak256(bytes(_guess)) == keccak256(bytes(targetWord))){
             endGame(player);
         }
@@ -37,11 +40,9 @@ contract Tokle {
     }
 
     function registerGuess(address player, string calldata _guess) public {
-        bool ok = token.transferFrom(player, address(this), costPerTry);
-        require(ok, "token transfer failed");
-
         guesses.push(_guess);
         triesLeft--;
+        if (triesLeft == 0) endGame(player);
     }
 
     function endGame(address player) public {

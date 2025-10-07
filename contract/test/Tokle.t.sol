@@ -47,7 +47,7 @@ contract TokleTest is Test {
 
         assertEq(tokle.getTries(), 0);
 
-        assertEq(token.balanceOf(user), 15e18);
+        assertEq(token.balanceOf(user), 14e18);
     }
 
     // Test multiple guesses then win
@@ -72,7 +72,7 @@ contract TokleTest is Test {
 
         // Refund = 3 tries left * 1 token = 3
         // User balance = 8 + 3 = 11
-        assertEq(token.balanceOf(user), 11e18);
+        assertEq(token.balanceOf(user), 10e18);
     }
 
     // Test that game cannot accept more guesses after finishing
@@ -83,5 +83,19 @@ contract TokleTest is Test {
         vm.prank(user);
         vm.expectRevert("no tries left");
         tokle.tryGuess(user, "alert");
+    }
+
+    // Test winning the game
+    function testLoseGame() public {
+        vm.prank(user);
+        tokle.tryGuess(user,"alert");
+        tokle.tryGuess(user,"alert");
+        tokle.tryGuess(user,"alert");
+        tokle.tryGuess(user,"alert");
+        tokle.tryGuess(user,"alert");
+
+        assertEq(tokle.getTries(), 0);
+
+        assertEq(token.balanceOf(user), 5e18);
     }
 }
