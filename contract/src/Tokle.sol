@@ -6,6 +6,8 @@ interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
 }
 
+import {Utility} from "../src/Utility.sol";
+
 contract Tokle {
     IERC20 public token;
     bytes32 public targetWord;
@@ -31,7 +33,7 @@ contract Tokle {
         bool ok = token.transferFrom(player, address(this), costPerTry);
         require(ok, "token transfer failed");
 
-        bytes32 guessHash = keccak256(abi.encode(_guess));
+        bytes32 guessHash = keccak256(abi.encode(Utility.toLowerCase(_guess)));
 
         if ( guessHash == targetWord){
             endGame(player);
