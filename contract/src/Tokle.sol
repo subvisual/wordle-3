@@ -8,7 +8,7 @@ interface IERC20 {
 
 contract Tokle {
     IERC20 public token;
-    string public targetWord;
+    bytes32 public targetWord;
     uint8 public triesLeft;
     uint256 public costPerTry;
 
@@ -21,7 +21,7 @@ contract Tokle {
     }
 
     function setTargetWord(string calldata _word) public{
-        targetWord =_word;
+        targetWord = keccak256(abi.encode(_word));
     }
 
     function tryGuess(address player, string calldata _guess) public{
@@ -31,7 +31,9 @@ contract Tokle {
         bool ok = token.transferFrom(player, address(this), costPerTry);
         require(ok, "token transfer failed");
 
-        if (keccak256(bytes(_guess)) == keccak256(bytes(targetWord))){
+        bytes32 guessHash = keccak256(abi.encode(_guess));
+
+        if ( guessHash == targetWord){
             endGame(player);
         }
         else{
