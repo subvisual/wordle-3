@@ -15,7 +15,7 @@ contract Tokle {
 
     // Each player has their own remaining tries and list of guesses
     mapping(address => uint8) public triesLeft;
-    mapping(address => string[]) private playerGuesses;
+    mapping(address => bytes32[]) private playerGuesses;
 
     
      // Constructor sets up the token and cost per try.
@@ -30,8 +30,8 @@ contract Tokle {
     // Set the target word for the game.
     // The word is hashed (after being converted to lowercase) to hide the answer on-chain.
     // _word The correct word players must guess.
-    function setTargetWord(string calldata _word) public {
-        targetWord = keccak256(abi.encode(Utility.toLowerCase(_word)));
+    function setTargetWord(bytes32 _word) public {
+        targetWord = _word;
     }
 
     
@@ -48,18 +48,14 @@ contract Tokle {
     // Charges the player one token per try and compares their guess hash to the target.
     // player The address of the player making the guess.
     // _guess The 5-letter word the player is guessing.
-    function tryGuess(address player, string calldata _guess) public {
+    function tryGuess(address player, bytes32 _guess) public {
         require(triesLeft[player] > 0, "no tries left");
-        require(bytes(_guess).length == 5, "must be 5 letters");
 
         // Charge the player for one try
         bool ok = token.transferFrom(player, address(this), costPerTry);
         require(ok, "token transfer failed");
 
-        // Compare guess (in lowercase) to the target word
-        bytes32 guessHash = keccak256(abi.encode(Utility.toLowerCase(_guess)));
-
-        if (guessHash == targetWord) {
+        if (_guess == targetWord) {
             // If the player guessed correctly, end the game and refund remaining tries
             endGame(player);
         } else {
@@ -73,7 +69,7 @@ contract Tokle {
     // If tries reach zero, automatically ends the game.
     // player The address of the player.
     // _guess The guessed word to record.
-    function registerGuess(address player, string calldata _guess) internal {
+    function registerGuess(address player, bytes32 _guess) internal {
         playerGuesses[player].push(_guess);
         triesLeft[player]--;
 
@@ -103,7 +99,7 @@ contract Tokle {
     // Returns all guesses made by a player.
     // player The address of the player to query.
     // An array of the player's guessed words.
-    function getGuesses(address player) external view returns (string[] memory) {
+    function getGuesses(address player) external view returns (bytes32[] memory) {
         return playerGuesses[player];
     }
 
