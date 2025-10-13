@@ -56,6 +56,11 @@
   font-size: 1.5rem;
 }
 
+.description a {
+  color: #0d76fc;
+  text-decoration: none;
+}
+
 .grid {
   display: flex;
   align-items: center;
