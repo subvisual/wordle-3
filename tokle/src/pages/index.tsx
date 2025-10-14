@@ -7,36 +7,61 @@ import { useEffect, useState } from 'react';
 const RANDOM_WORD_URL = 'https://random-word-api.herokuapp.com/word?length=5';
 
 const Home: NextPage = () => {
-  const [word,setWord] = useState('')
-  const [guess,setGuess] = useState('')
-  const [message,setMessage] = useState('')
+  const [word, setWord] = useState('');
+  const [guess, setGuess] = useState('');
+  const [message, setMessage] = useState('');
+  const [triesLeft, setTriesLeft] = useState(5);
+  const [gameOver, setGameOver] = useState(false);
 
   const fetchWord = async () => {
-      try {
-        const res = await fetch(RANDOM_WORD_URL);
-        if (!res.ok) throw new Error('Failed to fetch');
-        const data: string[] = await res.json();
-        setWord(data[0]);
-      } catch (err) {
-        console.error(err);
-      }
+    try {
+      const res = await fetch(RANDOM_WORD_URL);
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data: string[] = await res.json();
+      setWord(data[0]);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!word) return;
+    if (!word || gameOver) return;
 
-    if (guess.toLowerCase() === word) {
+    const normalizedGuess = guess.trim().toLowerCase();
+
+    if (normalizedGuess === word) {
       setMessage('Correct!');
-    } else {
-      setMessage('Try again!');
+      setGameOver(true);
+      return;
     }
+
+    const remaining = triesLeft - 1;
+    setTriesLeft(remaining);
+
+    if (remaining > 0) {
+      setMessage(`Wrong! You have ${remaining} ${remaining === 1 ? 'try' : 'tries'} left.`);
+    } else {
+      setMessage(`You lose! The word was "${word}".`);
+      setGameOver(true);
+    }
+
+    setGuess('');
   };
 
   useEffect(() => {
     fetchWord();
   }, []);
-  
+
+  const handleReset = () => {
+    setWord('');
+    setGuess('');
+    setMessage('');
+    setTriesLeft(5);
+    setGameOver(false);
+    fetchWord();
+  };
+
   return (
     <div className={styles.container}>
       <Head>
@@ -48,36 +73,39 @@ const Home: NextPage = () => {
         <link href="/favicon.ico" rel="icon" />
       </Head>
 
-      <main className={styles.main}>
-        <ConnectButton />
+    <main className={styles.main}>
+      <ConnectButton />
+      
+      <h1 className={styles.title}>Welcome to Tokle!</h1>
+      
+      <p className={styles.description}>
+        A <a href="https://www.nytimes.com/games/wordle/index.html">Wordle</a>{' '}
+        like game with Web3!
+      </p>
 
-        <h1 className={styles.title}>Welcome to Tokle!</h1>
+      <p>Daily word: {word ? word : 'Loading...'} (for testing)</p>
 
-        <p className={styles.description}>
-          A <a href='https://www.nytimes.com/games/wordle/index.html'>Wordle</a>
-          {' '}like game with Web3!
-        </p>
-
-        <p>Daily word: {word ? word : "Loading..."} (for testing)</p>
-
-        <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit}>
         <input
           type="text"
           value={guess}
           onChange={(e) => setGuess(e.target.value)}
           placeholder="Enter your guess"
           className="guess-input"
+          disabled={gameOver}
         />
-        <button type="submit" className="guess-button">
+        <button type="submit" className="guess-button" disabled={gameOver || !word}>
           Guess
         </button>
       </form>
+      
+      <p className="tries"> Tries left: {triesLeft}</p>
 
       <p className="message">{message}</p>
 
-      {message && (
-        <button onClick={() => window.location.reload()} className="reload-button">
-          Try a new word
+      {gameOver && (
+        <button onClick={handleReset} className="reload-button">
+          Try Again
         </button>
       )}
       </main>
@@ -92,3 +120,4 @@ const Home: NextPage = () => {
 };
 
 export default Home;
+
