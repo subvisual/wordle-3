@@ -3,25 +3,53 @@ import type { NextPage } from 'next';
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
 import { useEffect, useState } from 'react';
+import { useAccount } from 'wagmi';
+import { abi } from '../abi';
+import { readContract, writeContract } from '@wagmi/core'
+import { config } from '../wagmi';
+import { getRandomWord } from '../randomWord';
+import { keccak256, toBytes } from "viem";
 
-const RANDOM_WORD_URL = 'https://random-word-api.herokuapp.com/word?length=5';
+const CONTRACT_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';
 
 const Home: NextPage = () => {
+  const account = useAccount();
   const [word, setWord] = useState('');
   const [guess, setGuess] = useState('');
   const [message, setMessage] = useState('');
-  const [triesLeft, setTriesLeft] = useState(5);
+  const [triesLeft, setTriesLeft] = useState(1);
   const [gameOver, setGameOver] = useState(false);
 
-  const fetchWord = async () => {
-    try {
-      const res = await fetch(RANDOM_WORD_URL);
-      if (!res.ok) throw new Error('Failed to fetch');
-      const data: string[] = await res.json();
-      setWord(data[0]);
-    } catch (err) {
-      console.error(err);
-    }
+  const setup = () =>{
+    const randomWord = getRandomWord();
+    setWord(randomWord)
+
+    const wallet = account.address as `0x${string}`
+    writeContract(config,{
+        address: CONTRACT_ADDRESS,
+        abi: abi,
+        functionName: "startGame",
+        args:[wallet]
+    })
+
+    const hashWord = keccak256(toBytes(word)) as `0x${string}`;
+    writeContract(config,{
+        address: CONTRACT_ADDRESS,
+        abi: abi,
+        functionName: "setTargetWord",
+        args:[hashWord]
+    })
+  }
+
+  const getTries = async () => {
+      const result = await readContract(config, {
+        address: CONTRACT_ADDRESS as `0x${string}`,
+        abi,
+        functionName: "getTries",
+        args: [account.address as `0x${string}`],
+      });
+
+      setTriesLeft(result);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -29,6 +57,15 @@ const Home: NextPage = () => {
     if (!word || gameOver) return;
 
     const normalizedGuess = guess.trim().toLowerCase();
+    const hashGuess = keccak256(toBytes(normalizedGuess)) as `0x${string}`;
+    const wallet = account.address as `0x${string}`
+
+    writeContract(config,{
+        address: CONTRACT_ADDRESS,
+        abi: abi,
+        functionName: "tryGuess",
+        args:[wallet,hashGuess]
+    })
 
     if (normalizedGuess === word) {
       setMessage('Correct!');
@@ -36,11 +73,10 @@ const Home: NextPage = () => {
       return;
     }
 
-    const remaining = triesLeft - 1;
-    setTriesLeft(remaining);
+    getTries();
 
-    if (remaining > 0) {
-      setMessage(`Wrong! You have ${remaining} ${remaining === 1 ? 'try' : 'tries'} left.`);
+    if (triesLeft > 0) {
+      setMessage(`Wrong! You have ${triesLeft} ${triesLeft === 1 ? 'try' : 'tries'} left.`);
     } else {
       setMessage(`You lose! The word was "${word}".`);
       setGameOver(true);
@@ -50,16 +86,18 @@ const Home: NextPage = () => {
   };
 
   useEffect(() => {
-    fetchWord();
-  }, []);
+    if (account && account.isConnected) {
+      setup();
+      getTries();
+    }
+  }, [account]);
 
   const handleReset = () => {
-    setWord('');
-    setGuess('');
+    setup();
+    getTries();
     setMessage('');
-    setTriesLeft(5);
+    setTriesLeft(1);
     setGameOver(false);
-    fetchWord();
   };
 
   return (
@@ -120,4 +158,12 @@ const Home: NextPage = () => {
 };
 
 export default Home;
+
+function randomWords() {
+  throw new Error('Function not implemented.');
+}
+
+function toUtf8Bytes(word: string): import("js-sha3").Message {
+  throw new Error('Function not implemented.');
+}
 
