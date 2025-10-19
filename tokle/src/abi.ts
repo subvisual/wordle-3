@@ -1,5 +1,15 @@
 export const abi = [
   {
+    type: 'function',
+    name: 'mintToken',
+    stateMutability: 'unpayable',
+    inputs: [
+      { name: 'to', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [],
+  },
+  {
     type: "function",
     name: "setTargetWord",
     stateMutability: "nonpayable",

@@ -9,8 +9,14 @@ import { readContract, writeContract } from '@wagmi/core'
 import { config } from '../wagmi';
 import { getRandomWord } from '../randomWord';
 import { keccak256, toBytes } from "viem";
+import { tokenAbi } from '../tokenAbi';
 
+const TOKEN = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
 const CONTRACT_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';
+
+const ONE = BigInt(10**18);
+const APPROVE_AMOUNT = BigInt(500) * ONE;
+const MINT_AMOUNT = BigInt(5) * ONE;
 
 const Home: NextPage = () => {
   const account = useAccount();
@@ -20,26 +26,54 @@ const Home: NextPage = () => {
   const [triesLeft, setTriesLeft] = useState(1);
   const [gameOver, setGameOver] = useState(false);
 
-  const setup = () =>{
-    const randomWord = getRandomWord();
-    setWord(randomWord)
+  const setup = async () => {
+  if (!account?.address) return;
 
-    const wallet = account.address as `0x${string}`
-    writeContract(config,{
-        address: CONTRACT_ADDRESS,
-        abi: abi,
-        functionName: "startGame",
-        args:[wallet]
-    })
+  try {
+    const randomWord = getRandomWord().toLowerCase();
+    setWord(randomWord);
 
-    const hashWord = keccak256(toBytes(word)) as `0x${string}`;
-    writeContract(config,{
-        address: CONTRACT_ADDRESS,
-        abi: abi,
-        functionName: "setTargetWord",
-        args:[hashWord]
-    })
-  }
+    const wallet = account.address as `0x${string}`;
+
+    // 1) Approve once
+    await writeContract(config, {
+      address: TOKEN,
+      abi: tokenAbi,
+      functionName: "approve",
+      args: [CONTRACT_ADDRESS, APPROVE_AMOUNT],
+    });
+
+    // 2) Mint tokens to player
+    await writeContract(config, {
+      address: TOKEN,
+      abi: tokenAbi,
+      functionName: "mintToken",
+      args: [wallet, MINT_AMOUNT],
+    });
+
+    // 3) Start game 
+    await writeContract(config, {
+      address: CONTRACT_ADDRESS,
+      abi: abi,
+      functionName: "startGame",
+      args: [wallet],
+    });
+
+    // 4) Set target word
+    const hashWord = keccak256(toBytes(randomWord)) as `0x${string}`;
+    await writeContract(config, {
+      address: CONTRACT_ADDRESS,
+      abi: abi,
+      functionName: "setTargetWord",
+      args: [hashWord],
+    });
+
+    await getTries();
+
+  } catch (err: any) {
+    console.error("setup failed", err);
+    }
+  };
 
   const getTries = async () => {
       const result = await readContract(config, {
@@ -49,10 +83,10 @@ const Home: NextPage = () => {
         args: [account.address as `0x${string}`],
       });
 
-      setTriesLeft(result);
+      setTriesLeft(Number(result));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!word || gameOver) return;
 
@@ -73,11 +107,9 @@ const Home: NextPage = () => {
       return;
     }
 
-    getTries();
+    await getTries();
 
-    if (triesLeft > 0) {
-      setMessage(`Wrong! You have ${triesLeft} ${triesLeft === 1 ? 'try' : 'tries'} left.`);
-    } else {
+    if (triesLeft <= 0) {
       setMessage(`You lose! The word was "${word}".`);
       setGameOver(true);
     }
@@ -85,20 +117,24 @@ const Home: NextPage = () => {
     setGuess('');
   };
 
-  useEffect(() => {
-    if (account && account.isConnected) {
-      setup();
-      getTries();
-    }
-  }, [account]);
+  const handleReset = async () => {
+  setGameOver(false);
+  setMessage("");
+  await setup();
+};
 
-  const handleReset = () => {
-    setup();
-    getTries();
-    setMessage('');
-    setTriesLeft(1);
+  useEffect(() => {
+  if (account && account.isConnected) {
+    (async () => {
+      await setup();
+    })();
+  } else {
+    setWord("");
+    setTriesLeft(0);
     setGameOver(false);
-  };
+    setMessage("");
+  }
+}, [account]);
 
   return (
     <div className={styles.container}>
@@ -136,8 +172,6 @@ const Home: NextPage = () => {
           Guess
         </button>
       </form>
-      
-      <p className="tries"> Tries left: {triesLeft}</p>
 
       <p className="message">{message}</p>
 
@@ -158,12 +192,3 @@ const Home: NextPage = () => {
 };
 
 export default Home;
-
-function randomWords() {
-  throw new Error('Function not implemented.');
-}
-
-function toUtf8Bytes(word: string): import("js-sha3").Message {
-  throw new Error('Function not implemented.');
-}
-
