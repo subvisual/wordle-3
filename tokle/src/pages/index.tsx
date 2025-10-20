@@ -11,8 +11,8 @@ import { getRandomWord } from '../randomWord';
 import { keccak256, toBytes } from "viem";
 import { tokenAbi } from '../tokenAbi';
 
-const TOKEN = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
-const CONTRACT_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';
+const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_ADDRESS as `0x${string}`
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`
 
 const ONE = BigInt(10**18);
 const APPROVE_AMOUNT = BigInt(500) * ONE;
@@ -37,7 +37,7 @@ const Home: NextPage = () => {
 
     // 1) Approve once
     await writeContract(config, {
-      address: TOKEN,
+      address: TOKEN_ADDRESS,
       abi: tokenAbi,
       functionName: "approve",
       args: [CONTRACT_ADDRESS, APPROVE_AMOUNT],
@@ -45,7 +45,7 @@ const Home: NextPage = () => {
 
     // 2) Mint tokens to player
     await writeContract(config, {
-      address: TOKEN,
+      address: TOKEN_ADDRESS,
       abi: tokenAbi,
       functionName: "mintToken",
       args: [wallet, MINT_AMOUNT],
