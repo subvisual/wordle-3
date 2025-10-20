@@ -157,7 +157,9 @@ const Home: NextPage = () => {
         like game with Web3!
       </p>
 
+      {account.address === CONTRACT_ADDRESS &&  
       <p>Daily word: {word ? word : 'Loading...'} (for testing)</p>
+      }
 
       <form onSubmit={handleSubmit}>
         <input
