@@ -18,6 +18,8 @@ contract TokleScript is Script {
 
         tokle = new Tokle(address(token),1e18);
 
+        token.transfer(address(tokle),500e18);
+
         vm.stopBroadcast();
     }
 }
