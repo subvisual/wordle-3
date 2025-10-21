@@ -11,6 +11,7 @@ import { getRandomWord } from '../randomWord';
 import { keccak256, toBytes } from "viem";
 import { tokenAbi } from '../tokenAbi';
 import Grid from '../components/grid';
+import Keyboard from '../components/keyboard';
 
 const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_ADDRESS as `0x${string}`
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`
@@ -22,8 +23,8 @@ const MINT_AMOUNT = BigInt(5) * ONE;
 const Home: NextPage = () => {
   const account = useAccount();
   const [word, setWord] = useState('');
-  const [guess, setGuess] = useState('');
-  const [guesses, setGuesses] = useState<string[]>(['Trees','','','',''])
+  const [currentGuess, setCurrentGuess] = useState('');
+  const [guesses, setGuesses] = useState<string[]>([])
   const [message, setMessage] = useState('');
   const [triesLeft, setTriesLeft] = useState(1);
   const [gameOver, setGameOver] = useState(false);
@@ -88,11 +89,24 @@ const Home: NextPage = () => {
       setTriesLeft(Number(result));
   };
 
+  const handleKeyPress = (key:string) => {
+    if (guesses.length >= 5) return;
+
+    if (key === 'enter' && currentGuess.length === 5) {
+      setGuesses([...guesses,currentGuess])
+      setCurrentGuess('');
+    } else if (key === 'backspace') {
+      setCurrentGuess((prev) => prev.slice(0,-1))
+    } else if (currentGuess.length < 5) {
+      setCurrentGuess((prev) => prev + key.toLowerCase())
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!word || gameOver) return;
 
-    const normalizedGuess = guess.trim().toLowerCase();
+    const normalizedGuess = currentGuess.trim().toLowerCase();
     const hashGuess = keccak256(toBytes(normalizedGuess)) as `0x${string}`;
     const wallet = account.address as `0x${string}`
 
@@ -102,9 +116,6 @@ const Home: NextPage = () => {
         functionName: "tryGuess",
         args:[wallet,hashGuess]
     })
-
-    //const newGuesses = guesses.
-    //setGuesses(newGuesses)
 
     if (normalizedGuess === word) {
       setMessage('Correct!');
@@ -119,7 +130,7 @@ const Home: NextPage = () => {
       setGameOver(true);
     }
 
-    setGuess('');
+    setCurrentGuess('');
   };
 
   const handleReset = async () => {
@@ -166,11 +177,11 @@ const Home: NextPage = () => {
       <p>Daily word: {word ? word : 'Loading...'} (for testing)</p>
       }
 
-      <form onSubmit={handleSubmit}>
+      {/*<form onSubmit={handleSubmit}>
         <input
           type="text"
-          value={guess}
-          onChange={(e) => setGuess(e.target.value)}
+          value={currentGuess}
+          onChange={(e) => setCurrentGuess(e.target.value)}
           placeholder="Enter your guess"
           className="guess-input"
           disabled={gameOver}
@@ -178,9 +189,10 @@ const Home: NextPage = () => {
         <button type="submit" className="guess-button" disabled={gameOver || !word}>
           Guess
         </button>
-      </form>
+      </form>*/}
 
       <Grid guesses={guesses}/>
+      <Keyboard onKeyPress={handleKeyPress}/>
 
       <p className="message">{message}</p>
 

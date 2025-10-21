@@ -80,8 +80,35 @@
   align-items: center;
   width: 62px;
   height: 62px;
-  border: 2px solid;
+  border: 2px solid #818384;
   font-size: 2rem;
   font-weight: bold;
   text-transform: uppercase;
+}
+
+.keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 8px;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.keyboardRow {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.keyboardKey {
+  font-weight: bold;
+  border: 0;
+  height: 58px;
+  cursor: pointer;
+  background-color: #818384;
+  color: white;
+  flex: 1;
 }
