@@ -10,6 +10,7 @@ import { config } from '../wagmi';
 import { getRandomWord } from '../randomWord';
 import { keccak256, toBytes } from "viem";
 import { tokenAbi } from '../tokenAbi';
+import Grid from '../components/grid';
 
 const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_ADDRESS as `0x${string}`
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`
@@ -22,6 +23,7 @@ const Home: NextPage = () => {
   const account = useAccount();
   const [word, setWord] = useState('');
   const [guess, setGuess] = useState('');
+  const [guesses, setGuesses] = useState<string[]>(['Trees','','','',''])
   const [message, setMessage] = useState('');
   const [triesLeft, setTriesLeft] = useState(1);
   const [gameOver, setGameOver] = useState(false);
@@ -101,6 +103,9 @@ const Home: NextPage = () => {
         args:[wallet,hashGuess]
     })
 
+    //const newGuesses = guesses.
+    //setGuesses(newGuesses)
+
     if (normalizedGuess === word) {
       setMessage('Correct!');
       setGameOver(true);
@@ -174,6 +179,8 @@ const Home: NextPage = () => {
           Guess
         </button>
       </form>
+
+      <Grid guesses={guesses}/>
 
       <p className="message">{message}</p>
 
