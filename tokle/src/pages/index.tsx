@@ -26,7 +26,6 @@ const Home: NextPage = () => {
   const [word, setWord] = useState('');
   const [currentGuess, setCurrentGuess] = useState('');
   const [guesses, setGuesses] = useState<string[]>([])
-  const [message, setMessage] = useState('');
   const [triesLeft, setTriesLeft] = useState(1);
   const [gameOver, setGameOver] = useState(false);
 
@@ -97,9 +96,11 @@ const Home: NextPage = () => {
       if (currentGuess.length === 5) {
         setGuesses([...guesses,currentGuess])
         setCurrentGuess('')
+        handleSubmit()
+      } else{
+        alert('Need to be a five letter word!')
       }
 
-      //else alert
     } else if (key === 'backspace') {
       setCurrentGuess((prev) => prev.slice(0,-1))
     } else if (currentGuess.length < 5) {
@@ -107,8 +108,7 @@ const Home: NextPage = () => {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!word || gameOver) return;
 
     const normalizedGuess = currentGuess.trim().toLowerCase();
@@ -123,7 +123,7 @@ const Home: NextPage = () => {
     })
 
     if (normalizedGuess === word) {
-      setMessage('Correct!');
+      alert('Correct!');
       setGameOver(true);
       return;
     }
@@ -131,7 +131,7 @@ const Home: NextPage = () => {
     await getTries();
 
     if (triesLeft <= 0) {
-      setMessage(`You lose! The word was "${word}".`);
+      alert(`You lose! The word was "${word}".`);
       setGameOver(true);
     }
 
@@ -140,7 +140,6 @@ const Home: NextPage = () => {
 
   const handleReset = async () => {
   setGameOver(false);
-  setMessage("");
   await setup();
   };
 
@@ -153,9 +152,10 @@ const Home: NextPage = () => {
     })();
   } else {
     setWord("");
+    const randomWord = getRandomWord().toLowerCase();
+    setWord(randomWord);
     setTriesLeft(0);
     setGameOver(false);
-    setMessage("");
   }
 }, [account]);
 
@@ -184,24 +184,8 @@ const Home: NextPage = () => {
       <p>Daily word: {word ? word : 'Loading...'} (for testing)</p>
       }
 
-      {/*<form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={currentGuess}
-          onChange={(e) => setCurrentGuess(e.target.value)}
-          placeholder="Enter your guess"
-          className="guess-input"
-          disabled={gameOver}
-        />
-        <button type="submit" className="guess-button" disabled={gameOver || !word}>
-          Guess
-        </button>
-      </form>*/}
-
       <Grid guesses={guesses} currentGuess={currentGuess} solution={word}/>
       <Keyboard states={keyState} onKeyPress={handleKeyPress}/>
-
-      <p className="message">{message}</p>
 
       {gameOver && (
         <button onClick={handleReset} className="reload-button">
