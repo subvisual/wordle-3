@@ -7,11 +7,12 @@ import { useAccount } from 'wagmi';
 import { abi } from '../abi';
 import { readContract, writeContract } from '@wagmi/core'
 import { config } from '../wagmi';
-import { getRandomWord } from '../randomWord';
+import { getRandomWord } from '../utils/randomWord';
 import { keccak256, toBytes } from "viem";
 import { tokenAbi } from '../tokenAbi';
 import Grid from '../components/grid';
 import Keyboard from '../components/keyboard';
+import { keyboardState } from '../utils/keyboardState';
 
 const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_ADDRESS as `0x${string}`
 const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`
@@ -92,9 +93,13 @@ const Home: NextPage = () => {
   const handleKeyPress = (key:string) => {
     if (guesses.length >= 5) return;
 
-    if (key === 'enter' && currentGuess.length === 5) {
-      setGuesses([...guesses,currentGuess])
-      setCurrentGuess('');
+    if (key === 'enter') {
+      if (currentGuess.length === 5) {
+        setGuesses([...guesses,currentGuess])
+        setCurrentGuess('')
+      }
+
+      //else alert
     } else if (key === 'backspace') {
       setCurrentGuess((prev) => prev.slice(0,-1))
     } else if (currentGuess.length < 5) {
@@ -137,7 +142,9 @@ const Home: NextPage = () => {
   setGameOver(false);
   setMessage("");
   await setup();
-};
+  };
+
+  const keyState = keyboardState(guesses,word)
 
   useEffect(() => {
   if (account && account.isConnected) {
@@ -191,8 +198,8 @@ const Home: NextPage = () => {
         </button>
       </form>*/}
 
-      <Grid guesses={guesses}/>
-      <Keyboard onKeyPress={handleKeyPress}/>
+      <Grid guesses={guesses} currentGuess={currentGuess} solution={word}/>
+      <Keyboard states={keyState} onKeyPress={handleKeyPress}/>
 
       <p className="message">{message}</p>
 

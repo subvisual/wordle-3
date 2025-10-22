@@ -8,10 +8,11 @@ const KEYBOARD_ROWS = [
 ]
 
 interface Props{
-  onKeyPress: (key: string) => void
+    states: Record<string, string> ;
+    onKeyPress: (key: string) => void
 }
 
-export default function Keyboard({onKeyPress} : Props){
+export default function Keyboard({states, onKeyPress} : Props){
     useEffect(() => {
         const handleKeyDown = (event:KeyboardEvent) => {
                 const key = event.key;
@@ -32,10 +33,21 @@ export default function Keyboard({onKeyPress} : Props){
                 return (
                 <div key={rowIndex} className={styles.keyboardRow}>
                     {row.map((key) => {
+                        const state = key.length === 1 ? states[key.toLowerCase()] : ''
+
+                        const stateClass =
+                          state === 'correct'
+                            ? styles.correctKey
+                            : state === 'present'
+                            ? styles.presentKey
+                            : state === 'absent'
+                            ? styles.absentKey
+                            : styles.keyboardKey;
                         return (
-                            <button 
+                            <button
+                            key={key}
                             onClick={() => onKeyPress(key.toLowerCase())}
-                            className={styles.keyboardKey}>
+                            className={stateClass}>
                                 {key === 'Backspace' ? '⌫' :key}
                             </button>
                         )

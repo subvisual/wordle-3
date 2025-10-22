@@ -86,6 +86,51 @@
   text-transform: uppercase;
 }
 
+.correct {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 62px;
+  height: 62px;
+  border: 2px solid;
+  font-size: 2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  background-color: #538d4e;
+  border-color: #538d4e;
+  color: white;
+}
+
+.present {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 62px;
+  height: 62px;
+  border: 2px solid;
+  font-size: 2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  background-color: #b59f3b;
+  border-color: #b59f3b;
+  color: white;
+}
+
+.absent {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 62px;
+  height: 62px;
+  border: 2px solid;
+  font-size: 2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  background-color: #3a3a3c;
+  border-color: #3a3a3c;
+  color: white;
+}
+
 .keyboard {
   display: flex;
   flex-direction: column;
@@ -109,6 +154,36 @@
   height: 58px;
   cursor: pointer;
   background-color: #818384;
+  color: white;
+  flex: 1;
+}
+
+.correctKey {
+  font-weight: bold;
+  border: 0;
+  height: 58px;
+  cursor: pointer;
+  background-color: #538d4e;
+  color: white;
+  flex: 1;
+}
+
+.presentKey {
+  font-weight: bold;
+  border: 0;
+  height: 58px;
+  cursor: pointer;
+  background-color: #b59f3b;
+  color: white;
+  flex: 1;
+}
+
+.absentKey {
+  font-weight: bold;
+  border: 0;
+  height: 58px;
+  cursor: pointer;
+  background-color: #3a3a3c;
   color: white;
   flex: 1;
 }
