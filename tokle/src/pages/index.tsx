@@ -27,7 +27,6 @@ const Home: NextPage = () => {
   const [currentGuess, setCurrentGuess] = useState('');
   const [guesses, setGuesses] = useState<string[]>([])
   const [triesLeft, setTriesLeft] = useState(1);
-  const [gameOver, setGameOver] = useState(false);
 
   const setup = async () => {
   if (!account?.address) return;
@@ -89,7 +88,7 @@ const Home: NextPage = () => {
       setTriesLeft(Number(result));
   };
 
-  const handleKeyPress = (key:string) => {
+  const handleKeyPress = async (key:string) => {
     if (guesses.length >= 5) return;
 
     if (key === 'enter') {
@@ -97,6 +96,8 @@ const Home: NextPage = () => {
         setGuesses([...guesses,currentGuess])
         setCurrentGuess('')
         handleSubmit()
+        await getTries();
+        handleGameOver();
       } else{
         alert('Need to be a five letter word!')
       }
@@ -109,7 +110,7 @@ const Home: NextPage = () => {
   }
 
   const handleSubmit = async () => {
-    if (!word || gameOver) return;
+    if (!word) return;
 
     const normalizedGuess = currentGuess.trim().toLowerCase();
     const hashGuess = keccak256(toBytes(normalizedGuess)) as `0x${string}`;
@@ -122,28 +123,24 @@ const Home: NextPage = () => {
         args:[wallet,hashGuess]
     })
 
-    if (normalizedGuess === word) {
-      alert('Correct!');
-      setGameOver(true);
-      return;
-    }
-
-    await getTries();
-
-    if (triesLeft <= 0) {
-      alert(`You lose! The word was "${word}".`);
-      setGameOver(true);
-    }
-
     setCurrentGuess('');
   };
 
-  const handleReset = async () => {
-  setGameOver(false);
-  await setup();
-  };
-
   const keyState = keyboardState(guesses,word)
+
+  const handleGameOver = () => {
+    const normalizedGuess = currentGuess.trim().toLowerCase();
+    
+    if (normalizedGuess === word) {
+      alert('Correct!');
+      return;
+    }
+
+    if (triesLeft <= 0) {
+      alert(`You lose! The word was "${word}".`);
+      return;
+    }
+  }
 
   useEffect(() => {
   if (account && account.isConnected) {
@@ -152,10 +149,9 @@ const Home: NextPage = () => {
     })();
   } else {
     setWord("");
-    const randomWord = getRandomWord().toLowerCase();
-    setWord(randomWord);
+    setGuesses([]);
+    setCurrentGuess("");
     setTriesLeft(0);
-    setGameOver(false);
   }
 }, [account]);
 
@@ -179,19 +175,12 @@ const Home: NextPage = () => {
         A <a href="https://www.nytimes.com/games/wordle/index.html">Wordle</a>{' '}
         like game with Web3!
       </p>
-
-      {account.address === CONTRACT_ADDRESS &&  
+ 
       <p>Daily word: {word ? word : 'Loading...'} (for testing)</p>
-      }
 
       <Grid guesses={guesses} currentGuess={currentGuess} solution={word}/>
       <Keyboard states={keyState} onKeyPress={handleKeyPress}/>
 
-      {gameOver && (
-        <button onClick={handleReset} className="reload-button">
-          Try Again
-        </button>
-      )}
       </main>
 
       <footer className={styles.footer}>
