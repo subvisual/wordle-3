@@ -19,14 +19,14 @@ const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string
 
 const ONE = BigInt(10**18);
 const APPROVE_AMOUNT = BigInt(500) * ONE;
-const MINT_AMOUNT = BigInt(5) * ONE;
+const MINT_AMOUNT = BigInt(6) * ONE;
 
 const Home: NextPage = () => {
   const account = useAccount();
   const [word, setWord] = useState('');
   const [currentGuess, setCurrentGuess] = useState('');
   const [guesses, setGuesses] = useState<string[]>([])
-  const [triesLeft, setTriesLeft] = useState(1);
+  const [triesLeft, setTriesLeft] = useState(0);
 
   const setup = async () => {
   if (!account?.address) return;
@@ -70,7 +70,10 @@ const Home: NextPage = () => {
       args: [hashWord],
     });
 
-    await getTries();
+    const tries = await getTries();
+    setTriesLeft(tries);
+    console.log('Tries', tries)
+    console.log('Left',triesLeft)
 
   } catch (err: any) {
     console.error("setup failed", err);
@@ -85,18 +88,17 @@ const Home: NextPage = () => {
         args: [account.address as `0x${string}`],
       });
 
-      setTriesLeft(Number(result));
+      return result;
   };
 
   const handleKeyPress = async (key:string) => {
-    if (guesses.length >= 5) return;
+    if (guesses.length >= 6) return;
 
     if (key === 'enter') {
       if (currentGuess.length === 5) {
         setGuesses([...guesses,currentGuess])
         setCurrentGuess('')
-        handleSubmit()
-        await getTries();
+        await handleSubmit()
         handleGameOver();
       } else{
         alert('Need to be a five letter word!')
@@ -112,16 +114,22 @@ const Home: NextPage = () => {
   const handleSubmit = async () => {
     if (!word) return;
 
+    console.log('here')
+
     const normalizedGuess = currentGuess.trim().toLowerCase();
     const hashGuess = keccak256(toBytes(normalizedGuess)) as `0x${string}`;
     const wallet = account.address as `0x${string}`
 
-    writeContract(config,{
+    await writeContract(config,{
         address: CONTRACT_ADDRESS,
         abi: abi,
         functionName: "tryGuess",
         args:[wallet,hashGuess]
     })
+
+    const tries = await getTries();
+    setTriesLeft(tries);
+    console.log(triesLeft)
 
     setCurrentGuess('');
   };
@@ -135,8 +143,10 @@ const Home: NextPage = () => {
       alert('Correct!');
       return;
     }
+    console.log(triesLeft)
 
     if (triesLeft <= 0) {
+      console.log(triesLeft)
       alert(`You lose! The word was "${word}".`);
       return;
     }
@@ -147,11 +157,6 @@ const Home: NextPage = () => {
     (async () => {
       await setup();
     })();
-  } else {
-    setWord("");
-    setGuesses([]);
-    setCurrentGuess("");
-    setTriesLeft(0);
   }
 }, [account]);
 
@@ -176,9 +181,11 @@ const Home: NextPage = () => {
         like game with Web3!
       </p>
  
-      {account.address === CONTRACT_ADDRESS && 
+      {/*account.address === CONTRACT_ADDRESS && 
       <p>Daily word: {word ? word : 'Loading...'} (for testing)</p>
-      }
+      */}
+
+      <p>Daily word: {word ? word : 'Loading...'} (for testing)</p>
 
       <Grid guesses={guesses} currentGuess={currentGuess} solution={word}/>
       <Keyboard states={keyState} onKeyPress={handleKeyPress}/>

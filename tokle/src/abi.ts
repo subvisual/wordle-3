@@ -25,13 +25,6 @@ export const abi = [
   },
   {
     type: "function",
-    name: "getGuesses",
-    stateMutability: "view",
-    inputs: [{ name: "player", type: "address" }],
-    outputs: [{ name: "", type: "bytes32[]" }],
-  },
-  {
-    type: "function",
     name: "getTries",
     stateMutability: "view",
     inputs: [{ name: "player", type: "address" }],

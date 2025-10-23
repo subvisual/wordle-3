@@ -1,7 +1,7 @@
 import styles from '../styles/Home.module.css';
 import { letterState } from '../utils/letterState';
 
-const ROWS = 5
+const ROWS = 6
 const COLUMNS = 5
 
 interface Props{
