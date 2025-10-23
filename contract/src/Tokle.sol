@@ -6,21 +6,17 @@ interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
 }
 
-import {Utility} from "../src/Utility.sol";
-
 contract Tokle {
     IERC20 public token;        // ERC20 token used to play
     bytes32 public targetWord;  // Hashed target word that players are trying to guess
     uint256 public costPerTry;  // Cost (in tokens) per guess attempt
 
-    // Each player has their own remaining tries and list of guesses
+    // Each player has their own remaining tries
     mapping(address => uint8) public triesLeft;
-    mapping(address => bytes32[]) private playerGuesses;
-
     
-     // Constructor sets up the token and cost per try.
-     // _token Address of the ERC20 token used for payments.
-     // _costPerTry Token amount charged per guess attempt.
+    // Constructor sets up the token and cost per try.
+    // _token Address of the ERC20 token used for payments.
+    // _costPerTry Token amount charged per guess attempt.
     constructor(address _token, uint256 _costPerTry) {
         token = IERC20(_token);
         costPerTry = _costPerTry;
@@ -36,11 +32,10 @@ contract Tokle {
 
     
     // Start a new game for a player.
-    // Resets their tries and clears their previous guesses.
+    // Resets their tries.
     // player Address of the player starting a new game.
     function startGame(address player) public {
-        triesLeft[player] = 5; // Give the player 5 tries
-        delete playerGuesses[player]; // Clear old guesses
+        triesLeft[player] = 6; // Give the player 6 tries
     }
 
     
@@ -51,31 +46,20 @@ contract Tokle {
     function tryGuess(address player, bytes32 _guess) public {
         require(triesLeft[player] > 0, "no tries left");
 
-        // Charge the player for one try
+        // Charge the player for one try.
         bool ok = token.transferFrom(player, address(this), costPerTry);
         require(ok, "token transfer failed");
 
-        if (_guess == targetWord) {
+        if (_guess == targetWord ) {
             // If the player guessed correctly, end the game and refund remaining tries
             endGame(player);
         } else {
-            // Otherwise, register their guess and reduce tries
-            registerGuess(player, _guess);
-        }
-    }
-
-    
-    // Record the player's guess and decrease their remaining tries.
-    // If tries reach zero, automatically ends the game.
-    // player The address of the player.
-    // _guess The guessed word to record.
-    function registerGuess(address player, bytes32 _guess) internal {
-        playerGuesses[player].push(_guess);
-        triesLeft[player]--;
-
-        // If player runs out of tries, end the game
-        if (triesLeft[player] == 0) {
-            endGame(player);
+            // Decrease their remaining tries.
+            triesLeft[player]--;
+            // If player runs out of tries, end the game
+            if (triesLeft[player] == 0) {
+                endGame(player);
+            }
         }
     }
 
@@ -94,15 +78,6 @@ contract Tokle {
         // Set tries to zero — game is over
         triesLeft[player] = 0;
     }
-
-    
-    // Returns all guesses made by a player.
-    // player The address of the player to query.
-    // An array of the player's guessed words.
-    function getGuesses(address player) external view returns (bytes32[] memory) {
-        return playerGuesses[player];
-    }
-
     
     // Returns the number of tries remaining for a player.
     // player The address of the player to query.
