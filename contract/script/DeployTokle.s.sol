@@ -14,11 +14,12 @@ contract TokleScript is Script {
     function run() public {
         vm.startBroadcast();
 
-        token = new TestToken("My Awesome Token", "MAT", 1000e18);
+        token = new TestToken("Tokle Token", "TOK", 1000e18);
 
         tokle = new Tokle(address(token),1e18);
 
-        token.transfer(address(tokle),500e18);
+        bool ok = token.transfer(address(tokle),500e18);
+        require(ok, "token transfer failed");
 
         vm.stopBroadcast();
     }

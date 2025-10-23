@@ -63,45 +63,128 @@
 
 .grid {
   display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: 5px;
+  padding: 10px;
+  margin: 1rem 0;
+}
+
+.row {
+  display: flex;
+  gap: 5px;
+}
+
+.letter {
+  display: flex;
   justify-content: center;
-  flex-wrap: wrap;
-  max-width: 800px;
+  align-items: center;
+  width: 62px;
+  height: 62px;
+  border: 2px solid #818384;
+  font-size: 2rem;
+  font-weight: bold;
+  text-transform: uppercase;
 }
 
-.card {
-  margin: 1rem;
-  padding: 1.5rem;
-  text-align: left;
-  color: inherit;
-  text-decoration: none;
-  border: 1px solid #eaeaea;
-  border-radius: 10px;
-  transition: color 0.15s ease, border-color 0.15s ease;
-  max-width: 350px;
+.correct {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 62px;
+  height: 62px;
+  border: 2px solid;
+  font-size: 2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  background-color: #538d4e;
+  border-color: #538d4e;
+  color: white;
 }
 
-.card:hover,
-.card:focus,
-.card:active {
-  color: #0d76fc;
-  border-color: #0d76fc;
+.present {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 62px;
+  height: 62px;
+  border: 2px solid;
+  font-size: 2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  background-color: #b59f3b;
+  border-color: #b59f3b;
+  color: white;
 }
 
-.card h2 {
-  margin: 0 0 1rem 0;
-  font-size: 1.2rem;
+.absent {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 62px;
+  height: 62px;
+  border: 2px solid;
+  font-size: 2rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  background-color: #3a3a3c;
+  border-color: #3a3a3c;
+  color: white;
 }
 
-.card p {
-  margin: 0;
-  font-size: 1.2rem;
-  line-height: 1.5;
+.keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 8px;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
 }
 
-@media (max-width: 600px) {
-  .grid {
-    width: 100%;
-    flex-direction: column;
-  }
+.keyboardRow {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.keyboardKey {
+  font-weight: bold;
+  border: 0;
+  height: 58px;
+  cursor: pointer;
+  background-color: #818384;
+  color: white;
+  flex: 1;
+}
+
+.correctKey {
+  font-weight: bold;
+  border: 0;
+  height: 58px;
+  cursor: pointer;
+  background-color: #538d4e;
+  color: white;
+  flex: 1;
+}
+
+.presentKey {
+  font-weight: bold;
+  border: 0;
+  height: 58px;
+  cursor: pointer;
+  background-color: #b59f3b;
+  color: white;
+  flex: 1;
+}
+
+.absentKey {
+  font-weight: bold;
+  border: 0;
+  height: 58px;
+  cursor: pointer;
+  background-color: #3a3a3c;
+  color: white;
+  flex: 1;
 }

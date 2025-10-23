@@ -7,24 +7,25 @@ import { useAccount } from 'wagmi';
 import { abi } from '../abi';
 import { readContract, writeContract } from '@wagmi/core'
 import { config } from '../wagmi';
-import { getRandomWord } from '../randomWord';
+import { getRandomWord } from '../utils/randomWord';
 import { keccak256, toBytes } from "viem";
 import { tokenAbi } from '../tokenAbi';
+import Grid from '../components/grid';
+import Keyboard from '../components/keyboard';
+import { keyboardState } from '../utils/keyboardState';
 
-const TOKEN = '0x5FbDB2315678afecb367f032d93F642f64180aa3';
-const CONTRACT_ADDRESS = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';
+const TOKEN_ADDRESS = process.env.NEXT_PUBLIC_TOKEN_ADDRESS as `0x${string}`
+const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`
 
 const ONE = BigInt(10**18);
 const APPROVE_AMOUNT = BigInt(500) * ONE;
-const MINT_AMOUNT = BigInt(5) * ONE;
+const MINT_AMOUNT = BigInt(6) * ONE;
 
 const Home: NextPage = () => {
   const account = useAccount();
   const [word, setWord] = useState('');
-  const [guess, setGuess] = useState('');
-  const [message, setMessage] = useState('');
-  const [triesLeft, setTriesLeft] = useState(1);
-  const [gameOver, setGameOver] = useState(false);
+  const [currentGuess, setCurrentGuess] = useState('');
+  const [guesses, setGuesses] = useState<string[]>([]);
 
   const setup = async () => {
   if (!account?.address) return;
@@ -37,7 +38,7 @@ const Home: NextPage = () => {
 
     // 1) Approve once
     await writeContract(config, {
-      address: TOKEN,
+      address: TOKEN_ADDRESS,
       abi: tokenAbi,
       functionName: "approve",
       args: [CONTRACT_ADDRESS, APPROVE_AMOUNT],
@@ -45,7 +46,7 @@ const Home: NextPage = () => {
 
     // 2) Mint tokens to player
     await writeContract(config, {
-      address: TOKEN,
+      address: TOKEN_ADDRESS,
       abi: tokenAbi,
       functionName: "mintToken",
       args: [wallet, MINT_AMOUNT],
@@ -68,8 +69,6 @@ const Home: NextPage = () => {
       args: [hashWord],
     });
 
-    await getTries();
-
   } catch (err: any) {
     console.error("setup failed", err);
     }
@@ -83,56 +82,70 @@ const Home: NextPage = () => {
         args: [account.address as `0x${string}`],
       });
 
-      setTriesLeft(Number(result));
+      return result;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!word || gameOver) return;
+  const handleKeyPress = async (key:string) => {
+    if (guesses.length >= 6) return;
 
-    const normalizedGuess = guess.trim().toLowerCase();
+    if (key === 'enter') {
+      if (currentGuess.length === 5) {
+        setGuesses([...guesses,currentGuess])
+        setCurrentGuess('')
+        await handleSubmit()
+        handleGameOver();
+      } else{
+        alert('Need to be a five letter word!')
+      }
+
+    } else if (key === 'backspace') {
+      setCurrentGuess((prev) => prev.slice(0,-1))
+    } else if (currentGuess.length < 5) {
+      setCurrentGuess((prev) => prev + key.toLowerCase())
+    }
+  }
+
+  const handleSubmit = async () => {
+    if (!word) return;
+
+    const normalizedGuess = currentGuess.trim().toLowerCase();
     const hashGuess = keccak256(toBytes(normalizedGuess)) as `0x${string}`;
     const wallet = account.address as `0x${string}`
 
-    writeContract(config,{
+    await writeContract(config,{
         address: CONTRACT_ADDRESS,
         abi: abi,
         functionName: "tryGuess",
         args:[wallet,hashGuess]
     })
 
+    setCurrentGuess('');
+  };
+
+  const keyState = keyboardState(guesses,word)
+
+  const handleGameOver = async () => {
+    const normalizedGuess = currentGuess.trim().toLowerCase();
+
     if (normalizedGuess === word) {
-      setMessage('Correct!');
-      setGameOver(true);
+      alert('Correct!');
       return;
     }
 
-    await getTries();
+    const tries = await getTries();
+    console.log(tries)
 
-    if (triesLeft <= 0) {
-      setMessage(`You lose! The word was "${word}".`);
-      setGameOver(true);
+    if (tries <= 0) {
+      alert(`You lose! The word was "${word}".`);
+      return;
     }
-
-    setGuess('');
-  };
-
-  const handleReset = async () => {
-  setGameOver(false);
-  setMessage("");
-  await setup();
-};
+  }
 
   useEffect(() => {
   if (account && account.isConnected) {
     (async () => {
       await setup();
     })();
-  } else {
-    setWord("");
-    setTriesLeft(0);
-    setGameOver(false);
-    setMessage("");
   }
 }, [account]);
 
@@ -156,37 +169,20 @@ const Home: NextPage = () => {
         A <a href="https://www.nytimes.com/games/wordle/index.html">Wordle</a>{' '}
         like game with Web3!
       </p>
-
-      {account.address === CONTRACT_ADDRESS &&  
+ 
+      {account.address === CONTRACT_ADDRESS && 
       <p>Daily word: {word ? word : 'Loading...'} (for testing)</p>
       }
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={guess}
-          onChange={(e) => setGuess(e.target.value)}
-          placeholder="Enter your guess"
-          className="guess-input"
-          disabled={gameOver}
-        />
-        <button type="submit" className="guess-button" disabled={gameOver || !word}>
-          Guess
-        </button>
-      </form>
 
-      <p className="message">{message}</p>
+      <Grid guesses={guesses} currentGuess={currentGuess} solution={word}/>
+      <Keyboard states={keyState} onKeyPress={handleKeyPress}/>
 
-      {gameOver && (
-        <button onClick={handleReset} className="reload-button">
-          Try Again
-        </button>
-      )}
       </main>
 
       <footer className={styles.footer}>
         <a href="https://rainbow.me" rel="noopener noreferrer" target="_blank">
-          Made with ❤️ by your frens at 🌈
+          Made with ❤️ using RainbowKit 🌈
         </a>
       </footer>
     </div>

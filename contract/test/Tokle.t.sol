@@ -40,10 +40,7 @@ contract TokleTest is Test {
         bytes32 hashGuess = keccak256(abi.encodePacked("alert"));
         tokle.tryGuess(user1, hashGuess);
 
-        bytes32[] memory guesses = tokle.getGuesses(user1);
-        assertEq(guesses.length, 1);
-        assertEq(guesses[0], hashGuess);
-        assertEq(tokle.getTries(user1), 4);
+        assertEq(tokle.getTries(user1), 5);
 
         // Assert the balance of tokens
         assertEq(token.balanceOf(user1), 9e18);
@@ -57,7 +54,7 @@ contract TokleTest is Test {
         tokle.tryGuess(user1, hashGuess);
 
         assertEq(tokle.getTries(user1), 0);
-        assertEq(token.balanceOf(user1), 14e18);
+        assertEq(token.balanceOf(user1), 15e18);
     }
 
     // Test multiple guesses then win
@@ -71,8 +68,8 @@ contract TokleTest is Test {
         tokle.tryGuess(user1, hashGuess1);
         vm.stopPrank();
 
-        // Two wrong guesses => tries left = 3
-        assertEq(tokle.getTries(user1), 3);
+        // Two wrong guesses => tries left = 4
+        assertEq(tokle.getTries(user1), 4);
 
         // User token balance after 2 guesses: 10 - 2 = 8
         assertEq(token.balanceOf(user1), 8e18);
@@ -83,9 +80,9 @@ contract TokleTest is Test {
         // Remaining tries = 0
         assertEq(tokle.getTries(user1), 0);
 
-        // Refund = (3 tries left * 1 token) - 1 token of correct try = 2
-        // User balance = 8 + 2 = 10
-        assertEq(token.balanceOf(user1), 10e18);
+        // Refund = (4 tries left * 1 token) - 1 token of correct try = 3
+        // User balance = 8 + 3 = 11
+        assertEq(token.balanceOf(user1), 11e18);
     }
 
     // Test that game cannot accept more guesses after finishing
@@ -112,10 +109,11 @@ contract TokleTest is Test {
         tokle.tryGuess(user1, hashGuess);
         tokle.tryGuess(user1, hashGuess);
         tokle.tryGuess(user1, hashGuess);
+        tokle.tryGuess(user1, hashGuess);
         vm.stopPrank();
 
         assertEq(tokle.getTries(user1), 0);
-        assertEq(token.balanceOf(user1), 5e18);
+        assertEq(token.balanceOf(user1), 4e18);
     }
 
     // Two players should have independent tries and guesses
@@ -136,19 +134,8 @@ contract TokleTest is Test {
         vm.stopPrank();
 
         // Check independent state
-        assertEq(tokle.getTries(user1), 4);
-        assertEq(tokle.getTries(user2), 3);
-
-        bytes32[] memory guesses1 = tokle.getGuesses(user1);
-        bytes32[] memory guesses2 = tokle.getGuesses(user2);
-
-        assertEq(guesses1.length, 1);
-        assertEq(guesses2.length, 2);
-
-        // Verify their guesses differ
-        assertEq(guesses1[0], hashGuess1);
-        assertEq(guesses2[0], hashGuess2);
-        assertEq(guesses2[1], hashGuess3);
+        assertEq(tokle.getTries(user1), 5);
+        assertEq(tokle.getTries(user2), 4);
 
         // Token balances reflect correct deductions
         assertEq(token.balanceOf(user1), 9e18); // 1 try spent
