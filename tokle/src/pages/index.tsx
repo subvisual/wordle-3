@@ -170,11 +170,10 @@ const Home: NextPage = () => {
         like game with Web3!
       </p>
  
-      {/*account.address === CONTRACT_ADDRESS && 
+      {account.address === CONTRACT_ADDRESS && 
       <p>Daily word: {word ? word : 'Loading...'} (for testing)</p>
-      */}
+      }
 
-      <p>Daily word: {word ? word : 'Loading...'} (for testing)</p>
 
       <Grid guesses={guesses} currentGuess={currentGuess} solution={word}/>
       <Keyboard states={keyState} onKeyPress={handleKeyPress}/>
