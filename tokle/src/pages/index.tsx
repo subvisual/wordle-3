@@ -25,8 +25,7 @@ const Home: NextPage = () => {
   const account = useAccount();
   const [word, setWord] = useState('');
   const [currentGuess, setCurrentGuess] = useState('');
-  const [guesses, setGuesses] = useState<string[]>([])
-  const [triesLeft, setTriesLeft] = useState(0);
+  const [guesses, setGuesses] = useState<string[]>([]);
 
   const setup = async () => {
   if (!account?.address) return;
@@ -70,11 +69,6 @@ const Home: NextPage = () => {
       args: [hashWord],
     });
 
-    const tries = await getTries();
-    setTriesLeft(tries);
-    console.log('Tries', tries)
-    console.log('Left',triesLeft)
-
   } catch (err: any) {
     console.error("setup failed", err);
     }
@@ -114,8 +108,6 @@ const Home: NextPage = () => {
   const handleSubmit = async () => {
     if (!word) return;
 
-    console.log('here')
-
     const normalizedGuess = currentGuess.trim().toLowerCase();
     const hashGuess = keccak256(toBytes(normalizedGuess)) as `0x${string}`;
     const wallet = account.address as `0x${string}`
@@ -127,26 +119,23 @@ const Home: NextPage = () => {
         args:[wallet,hashGuess]
     })
 
-    const tries = await getTries();
-    setTriesLeft(tries);
-    console.log(triesLeft)
-
     setCurrentGuess('');
   };
 
   const keyState = keyboardState(guesses,word)
 
-  const handleGameOver = () => {
+  const handleGameOver = async () => {
     const normalizedGuess = currentGuess.trim().toLowerCase();
 
     if (normalizedGuess === word) {
       alert('Correct!');
       return;
     }
-    console.log(triesLeft)
 
-    if (triesLeft <= 0) {
-      console.log(triesLeft)
+    const tries = await getTries();
+    console.log(tries)
+
+    if (tries <= 0) {
       alert(`You lose! The word was "${word}".`);
       return;
     }
